@@ -283,7 +283,7 @@ class GatorokeServer():
                 continue
             if state == WAITING:
                 requestList = self.getDirList()
-                if len(requestList) > 0:
+                if requestList != None and len(requestList) > 0:
                     state = LIST
                 else:
                     self.writeMessage("Checking Queue...", clearbg=True)
@@ -340,6 +340,7 @@ class GatorokeServer():
             dirlist.sort(key=lambda x: os.path.getmtime(os.path.join(path, x)))
         except Exception, err:
             print 'ERROR: %s, %s' % (str(err), str(Exception))
+            return None
         return dirlist
 
     def sleep(self, seconds):
