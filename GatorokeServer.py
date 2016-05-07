@@ -25,6 +25,7 @@ INTRO=2
 PLAYING=3
 WAITING=4
 LIST=5
+SKIP=6
 
 # Import the optimised C version if available, or fall back to Python
 try:
@@ -41,6 +42,8 @@ import HTMLParser
 
 CDG_DISPLAY_WIDTH   = 288
 CDG_DISPLAY_HEIGHT  = 192
+PG_DISPLAY_WIDTH   = 800
+PG_DISPLAY_HEIGHT  = 600
 
 # Screen tile positions
 # The viewable area of the screen (294x204) is divided into 24 tiles
@@ -54,156 +57,11 @@ TILES_PER_COL           = 4
 TILE_WIDTH              = CDG_DISPLAY_WIDTH / TILES_PER_ROW
 TILE_HEIGHT             = CDG_DISPLAY_HEIGHT / TILES_PER_COL
 
-def showKaraokeIntro(songlist):
-
-    singer,song=songlist[0].split(":")
-    songname=song.split(" [")[0]
-    artist, title = songname.split(" - ", 1)
-
-    image = Image.new("RGBA", (640,480), (255,255,255))
-    draw = ImageDraw.Draw(image)
-    font = ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeSansBold.ttf", 24)
-    draw.text((10, 10), "%s -- %s (%s)" % (singer, title, artist), (0,0,0), font=font)
-    font = ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeSansBold.ttf", 18)
-    for i in range(1,len(songlist)):
-        if (100+(i*30)) > 450:
-            break
-        singer,song=songlist[i].split(":")
-        songname=song.split(" [")[0]
-        artist, title = songname.split(" - ", 1)
-        draw.text((10, (100+(i*30))), "%s -- %s (%s)" % (singer, title, artist), (0,0,0), font=font)
-    #str_image=image.tobytes()
-    str_image=pygame.image.tobytes(image, 'RGBA')
-    picture=pygame.image.fromstring(str_image, (image.size), "RGBA")
-
-    pygame.display.set_mode(picture.get_size(),pygame.FULLSCREEN)
-    main_surface = pygame.display.get_surface()
-    main_surface.blit(picture,(0,0))
-    pygame.display.update()
-    time.sleep(introSleepTime)
-
-def playRequestedCDG(singer, songfile):
-    songname=songfile.split(" [")[0]
-    artist, title = songname.split(" - ", 1)
-    player = cdgPlayer('%s/%s' % (cdgpath, songfile), None)
-    player.Play()
-    manager.WaitForPlayer()
-
-def playRequestedMP3(songfile):
-    fontsize=48
-    songname=songfile.split(" [")[0]
-    artist, title = songname.split(" - ", 1)
- 
-    txt="Up Next Some Song Sung by Alex"
-    image = Image.new("RGBA", (640,480), (255,255,255))
-    draw = ImageDraw.Draw(image)
-    font = ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeSansBold.ttf", fontsize)
-    draw.text((10, 0), "Now Playing...", (0,0,0), font=font)
-    draw.text((10, 100), title,  (0,0,0), font=font)
-    draw.text((10, 200), "by - %s" % artist, (0,0,0), font=font)
-    #str_image=image.tobytes()
-    str_image=pygame.image.tobytes(image, 'RGBA')
-    picture=pygame.image.fromstring(str_image, (image.size), "RGBA")
-
-    pygame.display.set_mode(picture.get_size(),pygame.FULLSCREEN)
-    main_surface = pygame.display.get_surface()
-    main_surface.blit(picture,(0,0))
-    pygame.mouse.set_visible(False)
-    pygame.display.update()
-
-    pygame.mixer.init()
-    pygame.mixer.music.load('%s/%s' % (mp3path, songfile))
-    pygame.mixer.music.play()
-    while pygame.mixer.music.get_busy():
-        pygame.time.Clock().tick(10)
-    pygame.display.quit()
-
-def waitScreen():
-    fontsize=36
-    image = Image.new("RGBA", (640,480), (255,255,255))
-    draw = ImageDraw.Draw(image)
-    font = ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeSansBold.ttf", fontsize)
-    draw.text((10, 10), "Waiting for Requests...", (0,0,0), font=font)
-    draw.text((10, 100), "Go to http://karaoke.thehern.org",  (0,0,0), font=font)
-    draw.text((10, 200), "to put in a request!!!", (0,0,0), font=font)
-    str_image=image.tobytes("raw", 'RGBA')
-    picture=pygame.image.fromstring(str_image, (image.size), "RGBA")
-
-    drivers = ['directfb', 'fbcon', 'svgalib']
-    found = False
-    for driver in drivers:
-        # Make sure that SDL_VIDEODRIVER is set
-        if not os.getenv('SDL_VIDEODRIVER'):
-            os.putenv('SDL_VIDEODRIVER', driver)
-        try:
-            pygame.display.init()
-        except pygame.error:
-            print 'Driver: {0} failed.'.format(driver)
-            continue
-        found = True
-        break
-
-    if not found:
-        raise Exception('No suitable video driver found!')
-
-    size = (pygame.display.Info().current_w, pygame.display.Info().current_h)
-
-    pygame.display.set_mode(picture.get_size(),pygame.FULLSCREEN)
-    main_surface = pygame.display.get_surface()
-    main_surface.blit(picture,(0,0))
-    pygame.mouse.set_visible(False)
-    pygame.display.update()
-    time.sleep(10)
-    pygame.display.quit()
-
-def playRequestedM3U(playlist):
-    print 'Playing Playlist: %s' % (playlist)
-
-
-def defaultErrorPrint(ErrorString):
-    print (ErrorString)
-
-
-def main2():
-
-    songlist = []
-    while 1 == 1:
-      try:
-        dirlist = os.listdir(path)
-        dirlist.sort(key=lambda x: os.path.getmtime(os.path.join(path, x)))
-        if len(dirlist) > 0:
-            if "PAUSE" in dirlist:
-                print 'Pausing...'
-                time.sleep(10)
-                continue
-            type=dirlist[0].split(".")[1]
-            songname=dirlist[0]
-            html_parser=HTMLParser.HTMLParser()
-            dirlist[0]=html_parser.unescape(dirlist[0])
-            if type == "cdg":
-                singer,song=dirlist[0].split(":")
-                showKaraokeIntro(dirlist)
-                print 'Playing CDG %s(%s)' % (singer, song)
-                playRequestedCDG(singer, song)
-                os.remove('%s/%s' % (path, songname))
-            elif type == "mp3":
-                print 'Playing MP3 %s' % (dirlist[0])
-                playRequestedMP3(dirlist[0])
-                os.remove('%s/%s' % (path, songname))
-            elif type == "m3u":
-                print 'Playing Songlist %s' % (dirlist[0])
-                playRequested3U(dirlist[0])
-                os.remove('%s/%s' % (path, songname))
-        else:
-            waitScreen()
-      except Exception, err:
-        print 'ERROR: %s, %s' % (str(err), str(Exception))
-        sys.exit()
-
 
 class GatorokeServer():
     def __init__(self):
-        drivers = ['directfb', 'fbcon', 'svgalib']
+        '''
+        drivers = ['fbcon','directfb', 'svgalib']
         found = False
         for driver in drivers:
             # Make sure that SDL_VIDEODRIVER is set
@@ -219,17 +77,17 @@ class GatorokeServer():
     
         if not found:
             raise Exception('No suitable video driver found!')
+        '''
+        self.displayInit()
     
-        size = (pygame.display.Info().current_w, pygame.display.Info().current_h)
-
-        #Initialize Everything
+    def displayInit(self):
         pygame.init()
-        self.screen = pygame.display.set_mode(size,pygame.FULLSCREEN)
-        pygame.display.set_caption('Gatoroake')
+        self.screen = pygame.display.set_mode([PG_DISPLAY_WIDTH, PG_DISPLAY_HEIGHT])
+        pygame.display.set_caption('Gatoroke')
         pygame.mouse.set_visible(0)
 
-        #Create The Backgound
-        self.background = pygame.Surface(self.screen.get_size())
+        self.background = pygame.Surface((PG_DISPLAY_WIDTH, PG_DISPLAY_HEIGHT))
+
         self.background = self.background.convert()
         self.background.fill((250, 250, 250))
 
@@ -246,6 +104,12 @@ class GatorokeServer():
 
         #Prepare Game Objects
         self.clock = pygame.time.Clock()
+        return
+
+    def displayQuit(self):
+        pygame.display.quit()
+	time.sleep(2)
+        return
 
     def run(self):
         '''
@@ -255,11 +119,12 @@ class GatorokeServer():
         PLAYING
         WAITING
         LIST
+        SKIP
         '''
         state=WAITING
         oldstate=None
         waitCounter = 0
-        sleepTime = 10
+        sleepTime = 2
         songlist = []
         while 1:
             self.screen.blit(self.background, (0, 0))
@@ -278,6 +143,8 @@ class GatorokeServer():
                     else:
                         oldstate = state
                         state = PAUSED
+                elif state == LIST and event.type == KEYDOWN and event.key == K_s:
+                    state = SKIP
             if state == PAUSED:
                 self.writeMessage('Paused\nPress "P" to continue', clearbg=True)
                 continue
@@ -286,11 +153,19 @@ class GatorokeServer():
                 if requestList != None and len(requestList) > 0:
                     state = LIST
                 else:
-                    self.writeMessage("Checking Queue...", clearbg=True)
+                    self.writeMessage("Waiting for Requests\n\nhttp://gatoroke", clearbg=True)
                     continue
+            if state == SKIP:
+                self.skipNextSinger(requestList)
+                state = LIST
+                continue
             elif state == LIST:
+                requestList = self.getDirList()
+                if len(requestList) == 0:
+                    state = WAITING
+                    continue
                 displayString = self.formatRequestString(requestList)
-                self.writeMessage("Upcoming Singers:\n%s\n\nSPACE to continue" %displayString, clearbg = True)
+                self.writeMessage("Upcoming Singers:\n%s\n\nSPACE to continue, S to Skip" %displayString, clearbg = True)
             elif state == INTRO:
                 #Intro Timer
                 if waitCounter > (sleepTime * 100):
@@ -299,14 +174,27 @@ class GatorokeServer():
                     self.playSong(requestList)
                     continue
                 waitCounter += 1
-                self.writeMessage("Intro Screen Countdown: %d" %(10 - (waitCounter / 100)), clearbg = True)
+                self.writeMessage("Intro Screen Countdown: %d" %(sleepTime - (waitCounter / 100)), clearbg = True)
                 #showKaraokeIntro(requestList)
                 continue
+
+    def skipNextSinger(self, requestList):
+        songname=requestList[0]
+        os.remove('%s/%s' % (path, songname))
+
+    def playRequestedCDG(self, singer, songfile):
+        self.displayQuit()
+        songname=songfile.split(" [")[0]
+        artist, title = songname.split(" - ", 1)
+        player = cdgPlayer.cdgPlayer('%s/%s' % (cdgpath, songfile), None)
+        player.Play()
+        manager.WaitForPlayer()
+        self.displayInit()
 
     def formatRequestString(self, requestList):
         retString = ""
         for i in range(0,len(requestList)):
-            if (100+(i*30)) > 450:
+            if i > 4:
                 break
             singer,song=requestList[i].split(":")
             songname=song.split(" [")[0]
@@ -323,7 +211,7 @@ class GatorokeServer():
         if type == "cdg":
             singer,song=requestList[0].split(":")
             print 'Playing CDG %s(%s)' % (singer, song)
-            #playRequestedCDG(singer, song)
+            self.playRequestedCDG(singer, song)
             os.remove('%s/%s' % (path, songname))
         elif type == "mp3":
             print 'Playing MP3 %s' % (requestList[0])
@@ -343,17 +231,6 @@ class GatorokeServer():
             return None
         return dirlist
 
-    def sleep(self, seconds):
-        count = 0
-        while count < seconds * 60:
-            count += 1
-            self.clock.tick(60)
-            for event in pygame.event.get():
-                self.checkQuit(event)
-            self.screen.blit(self.background, (0, 0))
-            pygame.display.flip()
-        return
-        
     def checkQuit(self, event):
         if event.type == QUIT:
             sys.exit(0)
@@ -368,13 +245,24 @@ class GatorokeServer():
     def writeMessage(self, message, size=36, clearbg=False):
         if clearbg == True:
             self.resetBackground()
-        text = self.font.render(message, True, (10, 10, 10))
+        message_list = message.split('\n')
+        maxLine=''
+        for line in message_list:
+            if len(line) > len(maxLine):
+                maxLine = line
+
+        text = self.font.render(maxLine, True, (10, 10, 10))
         textrect = text.get_rect()
-        #textrect.centerx = self.background.get_width()/2
-        textrect.centery = self.background.get_height()/2
-        for line in message.split('\n'):
+        textrect.centerx = self.background.get_width()/2
+        textrect.centery = (self.background.get_height()/2) - (len(message_list) * 15)
+        center_y = textrect.centery
+        #textrect.centery = self.background.get_height()/2
+        for line in message_list:
             text = self.font.render(line, True, (10, 10, 10))
-            textrect.centery += 30
+            textrect = text.get_rect()
+            textrect.centerx = self.background.get_width()/2
+            center_y += 30
+            textrect.centery = center_y
             self.background.blit(text, textrect)
 
     def waitScreen(self):
