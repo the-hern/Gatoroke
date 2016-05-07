@@ -1,0 +1,57 @@
+<%
+import os
+from cgi import escape
+from urllib import unquote
+
+queuedir="/var/www/songqueue"
+
+song = escape(unquote(str(form.getfirst('song'))))
+singer = escape(unquote(str(form.getfirst('singer'))))
+if singer == '':
+    singer = 'unknown'
+submit_value = escape(unquote(str(form.getfirst('Queue'))))
+
+songname=song.rsplit(".",1 )[0]
+songname=songname.split(" [")[0]
+artist, title = songname.split(" - ")
+
+%>
+<html>
+<head>
+<link rel="stylesheet" href="style.css">
+<meta name="viewport" content="user-scalable=no, width=device-width" />
+</head>
+<body>
+<h1>
+Selected Song
+</h1>
+<% 
+req.write('%s - %s<p>' % (artist, title))
+%>
+<p>
+<%
+
+if submit_value == 'Submit' and singer != '': 
+   queuefile='%s/%s:%s' % (queuedir,singer,song)
+   f=open(queuefile, "w")
+   f.close()
+%>
+   Singer: <%= singer%><p>
+   Submitted to the Queue!!!<br>
+<% 
+else:
+ %>
+ Add Song to Queue
+ <form action="" method="get">
+ <p>Singer Name:  <input type="text" name="singer">
+ <input type=hidden name=song value="<%= song%>">
+ <input type="submit" name="Queue" value="Submit"></p>
+ </form>
+<%
+
+%>
+<hr>
+<a href="index.psp">Return to Song List</a>
+</body>
+</html>
+

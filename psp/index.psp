@@ -1,0 +1,64 @@
+<%
+import os
+from cgi import escape
+from urllib import unquote,quote
+
+songlist = []
+path = "/home/hern/A-Z/"
+dirlist = os.listdir(path)
+
+searchstring = form.getfirst('searchstring')
+submit = form.getfirst('Submit')
+
+%>
+<html>
+<head>
+<link rel="stylesheet" href="style.css">
+<meta name="viewport" content="user-scalable=no, width=device-width" />
+</head>
+<body>
+<%
+
+for item in dirlist:
+   if item.find(".cdg") != -1:
+       if searchstring != None and searchstring != '':
+           if item.lower().find(searchstring.lower()) != -1:
+               songlist.append(item)
+       if submit == "ShowAll":
+           songlist.append(item)
+
+songlist.sort()
+
+%>
+<h2>
+Search Songs
+</h2>
+Search within Artist or Title
+<form action="" method="get">
+<p>Search:  <input type="text" name="searchstring">
+<input type="submit" name="Search" value="Search"></p>
+</form>
+<hr>
+<h1>
+Song List
+</h1>
+<% 
+cur_artist = ''
+for song in songlist:
+     songname=song.rsplit(".",1)[0]
+     songname=songname.split(" [")[0]
+     try:
+         artist, title = songname.split(" - ", 1)
+     except:
+     	req.write('<h1>ERROR: %s</h1>' % (song))
+     if cur_artist != artist:
+     	req.write('<h3>%s</h3>' % (artist))
+     req.write('<a href="selectsong.psp?song=%s">%s</a><br>' % (quote(song), title))
+     cur_artist = artist
+
+%>
+<hr>
+<a href="/playlist.psp">Current Playlist</a>    <a href="/index.psp?Submit=ShowAll">Show All Songs</a>
+</body>
+</html>
+

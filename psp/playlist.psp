@@ -1,0 +1,56 @@
+<%
+import os
+from cgi import escape
+from urllib import unquote
+
+songlist = []
+path = "/var/www/songqueue/"
+dirlist = os.listdir(path)
+dirlist.sort(key=lambda x: os.path.getmtime(os.path.join(path, x)))
+
+%>
+<html>
+<head>
+<link rel="stylesheet" href="style.css">
+<meta name="viewport" content="user-scalable=no, width=device-width" />
+</head>
+<body>
+<%
+
+for item in dirlist:
+   if item.find(".cdg") != -1:
+       songlist.append(item)
+
+%>
+<h1>
+Song Queue
+</h1>
+<% 
+first=1
+for song in dirlist:
+     if song.find(".cdg") != -1:
+         songname=song.rsplit(".",1)[0]
+         singer,songname=songname.split(":")
+         songname=songname.split(" [")[0]
+         artist, title = songname.split(" - ", 1)
+         if first == 1:
+             req.write('<b>KARAOKE: %s:%s - %s (Now Playing)</b><br>' % (singer, artist, title))
+             first=0
+         else:
+             req.write('KARAOKE: %s:%s - %s <br>' % (singer, artist, title))
+     elif song.find(".mp3") != -1:
+         songname=song.rsplit(".",1)[0]
+         songname=songname.split(" [")[0]
+         artist, title = songname.split(" - ", 1)
+         if first == 1:
+             req.write('<b>MUSIC: %s - %s (Now Playing)</b><br>' % (artist, title))
+             first=0
+         else:
+             req.write('MUSIC: %s - %s <br>' % (artist, title))
+
+%>
+<hr>
+<a href="/index.psp">Home Page</a>
+</body>
+</html>
+
