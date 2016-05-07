@@ -45,19 +45,6 @@ CDG_DISPLAY_HEIGHT  = 192
 PG_DISPLAY_WIDTH   = 800
 PG_DISPLAY_HEIGHT  = 600
 
-# Screen tile positions
-# The viewable area of the screen (294x204) is divided into 24 tiles
-# (6x4 of 49x51 each). This is used to only update those tiles which
-# have changed on every screen update, thus reducing the CPU load of
-# screen updates. A bitmask of tiles requiring update is held in
-# cdgPlayer.UpdatedTiles.  This stores each of the 4 columns in
-# separate bytes, with 6 bits used to represent the 6 rows.
-TILES_PER_ROW           = 6
-TILES_PER_COL           = 4
-TILE_WIDTH              = CDG_DISPLAY_WIDTH / TILES_PER_ROW
-TILE_HEIGHT             = CDG_DISPLAY_HEIGHT / TILES_PER_COL
-
-
 class GatorokeServer():
     def __init__(self):
         '''
