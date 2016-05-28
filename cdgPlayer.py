@@ -26,6 +26,8 @@ except ImportError:
 
 CDG_DISPLAY_WIDTH   = 288
 CDG_DISPLAY_HEIGHT  = 192
+#CDG_DISPLAY_WIDTH   = 1366
+#CDG_DISPLAY_HEIGHT  = 768
 
 # Screen tile positions
 # The viewable area of the screen (294x204) is divided into 24 tiles
@@ -88,7 +90,9 @@ class cdgPlayer(pykPlayer):
         # timer carries on even when the song has been paused.
         self.pauseOffsetTime = 0
 
+        manager.settings.CdgZoom = 'full'
         manager.InitPlayer(self)
+        #manager.OpenDisplay(displaySize=[CDG_DISPLAY_WIDTH, CDG_DISPLAY_HEIGHT])
         manager.OpenDisplay()
         manager.surface.fill((0, 0, 0))
 
@@ -451,3 +455,17 @@ class cdgPlayer(pykPlayer):
                 pygame.display.update(rect_list)
         else:
             manager.Flip()
+
+
+
+# Can be called from the command line with the CDG filepath as parameter
+def main():
+    player = cdgPlayer(None, None)
+    player.Play()
+    manager.WaitForPlayer()
+
+if __name__ == "__main__":
+    sys.exit(main())
+    #import profile
+    #result = profile.run('main()', 'pycdg.prof')
+    #sys.exit(result)

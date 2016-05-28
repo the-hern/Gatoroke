@@ -17,6 +17,7 @@ PythonHandler mod_python.publisher | .py
 AddHandler mod_python .psp .psp_
 PythonHandler mod_python.psp | .psp .psp_
 PythonDebug On
+DirectoryIndex index.php
 </Directory>
 
 

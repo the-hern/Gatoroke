@@ -14,8 +14,7 @@ import Image, ImageDraw, ImageFont
 import cdgPlayer
 
 path = "/var/www/songqueue/"
-cdgpath = "/home/hern/A-Z"
-#cdgpath = "/home/hern/Karaoke/A-Z"
+cdgpath = "/home/hern/Karaoke/A-Z"
 mp3path = "/home/hern/mp3"
 introSleepTime = 10
 
@@ -40,15 +39,14 @@ except ImportError:
 
 import HTMLParser
 
-CDG_DISPLAY_WIDTH   = 288
-CDG_DISPLAY_HEIGHT  = 192
-PG_DISPLAY_WIDTH   = 800
-PG_DISPLAY_HEIGHT  = 600
+PG_DISPLAY_WIDTH   = 1366
+PG_DISPLAY_HEIGHT  = 768
+#PG_DISPLAY_WIDTH   = 1024
+#PG_DISPLAY_HEIGHT  = 768
 
 class GatorokeServer():
     def __init__(self):
-        '''
-        drivers = ['fbcon','directfb', 'svgalib']
+        drivers = ['directfb', 'fbcon', 'svgalib']
         found = False
         for driver in drivers:
             # Make sure that SDL_VIDEODRIVER is set
@@ -59,16 +57,19 @@ class GatorokeServer():
             except pygame.error:
                 print 'Driver: {0} failed.'.format(driver)
                 continue
+            print "Driver: %s" %driver
             found = True
             break
     
         if not found:
             raise Exception('No suitable video driver found!')
-        '''
         self.displayInit()
     
     def displayInit(self):
         pygame.init()
+        print pygame.display.list_modes()
+        print pygame.display.Info()
+        #self.screen = pygame.display.set_mode([PG_DISPLAY_WIDTH, PG_DISPLAY_HEIGHT],FULLSCREEN)
         self.screen = pygame.display.set_mode([PG_DISPLAY_WIDTH, PG_DISPLAY_HEIGHT])
         pygame.display.set_caption('Gatoroke')
         pygame.mouse.set_visible(0)
@@ -170,7 +171,7 @@ class GatorokeServer():
         os.remove('%s/%s' % (path, songname))
 
     def playRequestedCDG(self, singer, songfile):
-        self.displayQuit()
+        #self.displayQuit()
         songname=songfile.split(" [")[0]
         artist, title = songname.split(" - ", 1)
         player = cdgPlayer.cdgPlayer('%s/%s' % (cdgpath, songfile), None)
@@ -221,7 +222,7 @@ class GatorokeServer():
     def checkQuit(self, event):
         if event.type == QUIT:
             sys.exit(0)
-        elif event.type == KEYDOWN and event.key == K_ESCAPE:
+        elif event.type == KEYDOWN and event.key == K_q:
             sys.exit(0)
 
     def resetBackground(self):
